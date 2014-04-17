@@ -20,6 +20,7 @@ public:
 	unsigned char *pixels();
 	unsigned int width() const;
 	unsigned int height() const;
+
 };
 
 #endif
