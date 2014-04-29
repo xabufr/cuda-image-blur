@@ -5,22 +5,22 @@
 
 bool add = true;
 
-void cleanup( DataBlock *d ) {
-	cudaFree( d->dev_bitmap );
-	cudaFree( d->dev_output);
+void cleanup(DataBlock *d) {
+	cudaFree(d->dev_bitmap);
+	cudaFree(d->dev_output);
 }
 
 __device__ int getPixelIndex(int x, int y, int width) {
 	int offset = y * width + x;
 	return offset * 4;
 }
-__global__ void kernel(unsigned char *pixels, unsigned char *output, int width, int height,
-		int radius) {
+__global__ void kernel(unsigned char *pixels, unsigned char *output, int width,
+		int height, int radius) {
 	int x, y;
 	x = blockIdx.x * blockDim.x + threadIdx.x;
 	y = blockIdx.y * blockDim.y + threadIdx.y;
 	if (x < width && y < height) {
-		unsigned int averageColor[3] = {0, 0, 0};
+		unsigned int averageColor[3] = { 0, 0, 0 };
 		int pixelOffset = getPixelIndex(x, y, width);
 
 		int count = 0;
@@ -53,24 +53,26 @@ __global__ void kernel(unsigned char *pixels, unsigned char *output, int width, 
 	}
 }
 
-void generateFrame(DataBlock *d, int ticks)
-{
+void generateFrame(DataBlock *d, int ticks) {
 	if ((ticks % 50) == 0)
 		add = !add;
 
-	if ((ticks % 5) == 0)
-		d->radius = (add)?d->radius+1:d->radius-1;
+	if ((ticks % 5) == 0) {
+		d->radius = (add) ? d->radius + 1 : d->radius - 1;
 
-	std::size_t pixelsSize = sizeof(unsigned char) * d->image.width()
+		std::size_t pixelsSize = sizeof(unsigned char) * d->image.width()
 				* d->image.height() * 4;
-	cudaMemcpy(d->dev_bitmap, d->image.pixels(), pixelsSize, cudaMemcpyHostToDevice);
+		cudaMemcpy(d->dev_bitmap, d->image.pixels(), pixelsSize,
+				cudaMemcpyHostToDevice);
 
-	kernel<<<dim3((d->image.width() / 16) + 1, (d->image.height() / 16) + 1),
-			dim3(17, 17)>>>(d->dev_bitmap, d->dev_output,
-					d->image.width(), d->image.height(), d->radius);
+		kernel<<<
+				dim3((d->image.width() / 16) + 1, (d->image.height() / 16) + 1),
+				dim3(17, 17)>>>(d->dev_bitmap, d->dev_output, d->image.width(),
+				d->image.height(), d->radius);
 
-	cudaMemcpy(d->bitmap->get_ptr(), d->dev_output, pixelsSize,
-			cudaMemcpyDeviceToHost);
+		cudaMemcpy(d->bitmap->get_ptr(), d->dev_output, pixelsSize,
+				cudaMemcpyDeviceToHost);
+	}
 }
 
 int main() {
@@ -86,7 +88,7 @@ int main() {
 	cudaMalloc(&data.dev_output, pixelsSize);
 	cudaMalloc(&data.dev_bitmap, pixelsSize);
 
-	bitmap.anim_and_exit( (void (*)(void*,int))generateFrame, (void (*)(void*))cleanup );
+	bitmap.anim_and_exit((void (*)(void*, int))generateFrame, (void (*)(void*))cleanup );
 
 	return 0;
 }
