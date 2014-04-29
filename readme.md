@@ -1,3 +1,4 @@
-#Autheurs:#
+Autheurs:
+=========
 * Thomas Loubiou
 * Alexandre Ramel
