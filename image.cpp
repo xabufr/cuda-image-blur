@@ -1,5 +1,4 @@
 #include "image.h"
-#include <CImg.h>
 #include <SDL/SDL_image.h>
 
 Image::Image() :

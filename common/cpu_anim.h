@@ -20,7 +20,17 @@
 #include "gl_helper.h"
 
 #include <iostream>
+#include <time.h>
 
+typedef struct CPUAnimBitmap CPUAnimBitmap;
+
+struct DataBlock{
+	unsigned char *dev_bitmap;
+	unsigned char *dev_output;
+	Image image;
+	CPUAnimBitmap *bitmap;
+	int radius;
+};
 
 struct CPUAnimBitmap {
     unsigned char    *pixels;
