@@ -60,15 +60,21 @@ void generateFrame(DataBlock *d, int ticks) {
 	if ((ticks % 5) == 0) {
 		d->radius = (add) ? d->radius + 1 : d->radius - 1;
 
+		cudaEventRecord(d->start, 0);
 		std::size_t pixelsSize = sizeof(unsigned char) * d->image.width()
 				* d->image.height() * 4;
 		cudaMemcpy(d->dev_bitmap, d->image.pixels(), pixelsSize,
 				cudaMemcpyHostToDevice);
 
 		kernel<<<
-				dim3((d->image.width() / 16) + 1, (d->image.height() / 16) + 1),
-				dim3(17, 17)>>>(d->dev_bitmap, d->dev_output, d->image.width(),
+				dim3((d->image.width() / 15) + 1, (d->image.height() / 15) + 1),
+				dim3(16, 16)>>>(d->dev_bitmap, d->dev_output, d->image.width(),
 				d->image.height(), d->radius);
+		cudaEventRecord(d->stop, 0);
+		cudaEventSynchronize(d->stop);
+		float elapsedTime;
+		cudaEventElapsedTime(&elapsedTime, d->start, d->stop);
+		std::cout << "Elapsed time: " << elapsedTime << std::endl;
 
 		cudaMemcpy(d->bitmap->get_ptr(), d->dev_output, pixelsSize,
 				cudaMemcpyDeviceToHost);
@@ -87,6 +93,11 @@ int main() {
 
 	cudaMalloc(&data.dev_output, pixelsSize);
 	cudaMalloc(&data.dev_bitmap, pixelsSize);
+
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
 
 	bitmap.anim_and_exit((void (*)(void*, int))generateFrame, (void (*)(void*))cleanup );
 
